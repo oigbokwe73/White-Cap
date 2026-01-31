@@ -25,7 +25,7 @@ flowchart LR
   %% Actors / Sources
   %% =========================
   ERP[Construction ERP\nProcore/Sage/CMiC/Viewpoint] -->|PO / Receipt / Vendor Master| API[ERP Export/API/Webhook]
-  SUP[Supplier\n(White Cap / Others)] -->|Invoice PDF / EDI 810 / ASN| IN[Inbound Channel]
+  SUP[Supplier\nWhite Cap / Others] -->|Invoice PDF / EDI 810 / ASN| IN[Inbound Channel]
 
   %% =========================
   %% Inbound Channels
@@ -40,7 +40,7 @@ flowchart LR
   %% Orchestration / Validation
   %% =========================
   subgraph Orchestration["Orchestration + Validation"]
-    AF1 --> SBPO[(Service Bus Queue\npo-events)]
+    AF1 --> SBPO[Service Bus Queue\npo-events]
     AF2[Azure Function: Ingest-Supplier] --> SBQ
     SBPO --> AF3[Azure Function: Validate+Normalize (PO/Receipt)]
     SBQ --> AF4[Azure Function: Validate+Normalize (Invoice/ASN)]
