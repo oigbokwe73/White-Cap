@@ -33,7 +33,7 @@ flowchart LR
   subgraph Inbound["Inbound Channels"]
     API --> AF1[Azure Function: Ingest-ERP]
     IN --> SA[(Blob Storage\nInbound Docs)]
-    IN --> SBQ[(Service Bus Queue\nsupplier-events)]
+    IN --> SBQ[Service Bus Queue\nsupplier-events]
   end
 
   %% =========================
