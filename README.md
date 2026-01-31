@@ -32,7 +32,7 @@ flowchart LR
   %% =========================
   subgraph Inbound["Inbound Channels"]
     API --> AF1[Azure Function: Ingest-ERP]
-    IN --> SA[(Blob Storage\nInbound Docs)]
+    IN --> SA[Blob Storage\nInbound Docs]
     IN --> SBQ[Service Bus Queue\nsupplier-events]
   end
 
@@ -42,8 +42,8 @@ flowchart LR
   subgraph Orchestration["Orchestration + Validation"]
     AF1 --> SBPO[Service Bus Queue\npo-events]
     AF2[Azure Function: Ingest-Supplier] --> SBQ
-    SBPO --> AF3[Azure Function: Validate+Normalize (PO/Receipt)]
-    SBQ --> AF4[Azure Function: Validate+Normalize (Invoice/ASN)]
+    SBPO --> AF3[Azure Function: Validate+Normalize PO/Receipt]
+    SBQ --> AF4[Azure Function: Validate+Normalize Invoice/ASN]
     AF3 --> SBT[(Service Bus Topic\nprocurement-domain)]
     AF4 --> SBT
   end
@@ -52,8 +52,8 @@ flowchart LR
   %% Persistence
   %% =========================
   subgraph Data["Data Layer"]
-    SQL[(Azure SQL Database\nProcurement + Job Cost)]
-    SA --> AF5[Azure Function: Doc Parser\n(PDF/EDI Parser)]
+    SQL[Azure SQL Database\nProcurement + Job Cost]
+    SA --> AF5[Azure Function: Doc Parser\nPDF/EDI Parser]
     AF5 --> SQL
     SBT --> AF6[Azure Function: Upsert Writer]
     AF6 --> SQL
