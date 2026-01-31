@@ -63,9 +63,9 @@ flowchart LR
   %% Exceptions / DLQ
   %% =========================
   subgraph Ops["Ops + Exceptions"]
-    SBT -->|validation fail| DLQ[(Service Bus DLQ)]
+    SBT -->|validation fail| DLQ[Service Bus DLQ]
     DLQ --> AF7[Azure Function: Exception Handler]
-    AF7 --> SQLX[(Azure SQL\nExceptions/Audit)]
+    AF7 --> SQLX[(Azure SQL Exceptions/Audit)]
     AF7 --> NOTIF[Teams/Email/Webhook Alert]
   end
 
