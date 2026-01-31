@@ -838,6 +838,117 @@ sequenceDiagram
     PBI-->>PBI: Job Cost / Spend / Exception Dashboards
 ```
 
+Below is a **clean, audit-ready breakdown of the Procurement 3-Way Match sequence**, mapped exactly to how this is implemented in an **Azure-based procurement integration architecture** (ERP + APIs + EDI + analytics).
+
+This is written the way **finance, auditors, and architects all understand it** — especially useful for SOX-controlled environments.
+
+---
+
+# ✅ Procurement 3-Way Match — Step-by-Step Table
+
+### 3-Way Match compares:
+
+* **Purchase Order (PO)**
+* **Goods Receipt (GR / Receiving)**
+* **Supplier Invoice (INV)**
+
+Only when all three align → **invoice is approved for payment**.
+
+---
+
+## 🔁 3-Way Match Sequence (Detailed)
+
+| Step # | Stage                        | Trigger / Input                           | Azure Services Involved                              | What Happens                                                         | Output / Status                  |
+| ------ | ---------------------------- | ----------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------- |
+| 1      | Purchase Requisition Created | Project team or system requests materials | ERP / Procurement Portal                             | User submits requisition with project, cost code, items, qty, budget | Requisition = *Pending Approval* |
+| 2      | Requisition Approval         | Manager / PM approval                     | ERP workflow                                         | Approval rules validate budget, cost center, authority               | Requisition = *Approved*         |
+| 3      | Purchase Order Generated     | Approved requisition                      | ERP                                                  | ERP converts requisition into PO with unique PO number               | PO = *Open*                      |
+| 4      | PO Sent to Supplier          | PO created                                | APIM → Functions → Service Bus → Supplier API or EDI | PO transmitted via REST API or EDI 850                               | PO Sent                          |
+| 5      | PO Acknowledged              | Supplier response                         | Supplier API or EDI 855                              | Supplier confirms pricing, quantity, dates                           | PO Ack = *Accepted / Modified*   |
+| 6      | PO Stored as Baseline        | Acknowledged PO                           | Azure SQL                                            | Final “committed” PO becomes baseline for matching                   | PO Baseline Locked               |
+| 7      | Goods Shipped                | Supplier ships items                      | Supplier ASN                                         | Advance Ship Notice (EDI 856 or API) sent                            | Shipment In Transit              |
+| 8      | Goods Received               | Materials arrive on site                  | Jobsite app / ERP                                    | Foreman confirms delivery quantities                                 | Receipt Created                  |
+| 9      | Goods Receipt Recorded       | Receipt confirmation                      | Azure Functions → Azure SQL                          | GR posted with received qty and date                                 | GR = *Posted*                    |
+| 10     | Invoice Submitted            | Supplier invoice                          | Supplier API or EDI 810                              | Invoice received electronically                                      | Invoice Received                 |
+| 11     | Invoice Validated            | Invoice intake                            | Logic Apps / Functions                               | Schema validation, duplicates check, tax check                       | Invoice = *Validated*            |
+| 12     | Invoice Persisted            | Valid invoice                             | Azure SQL                                            | Invoice header + line items stored                                   | Invoice = *Pending Match*        |
+| 13     | 3-Way Match Initiated        | Invoice posted                            | Azure Functions                                      | System retrieves PO + GR + Invoice                                   | Match Evaluation Begins          |
+| 14     | Quantity Match               | Compare invoice vs receipt                | Azure SQL logic                                      | Ensures invoiced qty ≤ received qty                                  | Pass / Fail                      |
+| 15     | Price Match                  | Compare invoice vs PO                     | Azure SQL logic                                      | Ensures unit price matches PO                                        | Pass / Fail                      |
+| 16     | Tolerance Check              | Pricing tolerances                        | Config table                                         | Allows ±% or $ tolerance                                             | Pass / Exception                 |
+| 17     | Match Decision               | All rules evaluated                       | Azure Functions                                      | Determines final match status                                        | Matched / Partial / Exception    |
+| 18     | Matched Invoice              | Successful match                          | Azure SQL                                            | Invoice auto-approved                                                | Ready for Payment                |
+| 19     | Exception Handling           | Match failure                             | Service Bus + Workflow                               | Routed to AP / Procurement                                           | Exception Queue                  |
+| 20     | Manual Review                | AP team review                            | Procurement Portal                                   | User reviews discrepancy                                             | Approved / Rejected              |
+| 21     | Payment Approval             | Approved invoice                          | ERP                                                  | Invoice approved for payment run                                     | Approved                         |
+| 22     | Payment Execution            | Scheduled payment                         | ERP / Bank                                           | ACH / Wire issued                                                    | Paid                             |
+| 23     | Payment Confirmation         | Bank response                             | ERP                                                  | Payment reference stored                                             | Payment Complete                 |
+| 24     | Spend Record Created         | Financial posting                         | Azure SQL / ADLS                                     | Final spend record written                                           | Spend Finalized                  |
+| 25     | Analytics Updated            | Data refresh                              | Synapse / Databricks → Power BI                      | KPIs updated                                                         | Dashboards Updated               |
+
+---
+
+## 🧮 Match Logic Summary (What the system checks)
+
+| Check Type | Compared Values            | Rule                   |
+| ---------- | -------------------------- | ---------------------- |
+| Quantity   | Invoice Qty ≤ Received Qty | Prevent overbilling    |
+| Price      | Invoice Price = PO Price   | Prevent price drift    |
+| Tax        | Invoice Tax vs expected    | Validate correctness   |
+| Freight    | Allowed or excluded        | Policy-driven          |
+| Duplicate  | Invoice number uniqueness  | Prevent double payment |
+| Tolerance  | Config-driven thresholds   | Auto vs manual review  |
+
+---
+
+## 🧱 Match Outcomes
+
+| Status            | Meaning                          |
+| ----------------- | -------------------------------- |
+| **Matched**       | All checks passed → auto-approve |
+| **Partial Match** | Minor variance within tolerance  |
+| **Exception**     | Requires human review            |
+| **Rejected**      | Invalid or duplicate invoice     |
+
+---
+
+## 📊 Key Analytics Enabled
+
+Once implemented this way, you unlock **real finance-grade reporting**:
+
+* Invoice exception rate by supplier
+* Average days PO → Invoice → Payment
+* Overbilling attempts prevented
+* Spend by project / cost code / supplier
+* Supplier SLA scorecards
+* Audit trail per document
+
+All powered directly from:
+
+* Azure SQL (system of record)
+* ADLS Gen2 (immutable raw docs)
+* Power BI (finance dashboards)
+
+---
+
+## 🔐 Why Auditors Like This Design
+
+✔ Immutable PO baseline
+✔ Clear approval checkpoints
+✔ Automated controls with manual override
+✔ Full document lineage (PO → GR → INV → PAY)
+✔ Correlation ID across APIs, EDI, and ERP
+✔ Separation of duties enforced
+
+This aligns perfectly with:
+
+* SOX
+* Internal audit
+* External financial audits
+* Government or infrastructure projects
+
+---
+
 ---
 
 ## 🔍 What This Diagram Clearly Shows
