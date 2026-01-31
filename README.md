@@ -24,7 +24,7 @@ flowchart LR
   %% =========================
   %% Actors / Sources
   %% =========================
-  ERP[Construction ERP\n(Procore/Sage/CMiC/Viewpoint)] -->|PO / Receipt / Vendor Master| API[ERP Export/API/Webhook]
+  ERP[Construction ERP\nProcore/Sage/CMiC/Viewpoint] -->|PO / Receipt / Vendor Master| API[ERP Export/API/Webhook]
   SUP[Supplier\n(White Cap / Others)] -->|Invoice PDF / EDI 810 / ASN| IN[Inbound Channel]
 
   %% =========================
