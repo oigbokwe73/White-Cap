@@ -259,23 +259,23 @@ flowchart LR
 
   %% Integration
   subgraph Integration[Integration Layer]
-    FN[Azure Functions\nOrchestration]
-    LA[Logic Apps\nB2B / EDI workflows]
-    SB[Service Bus\nQueues + Topics]
-    EH[Event Hubs\nStreaming events]
-    KV[Key Vault\nSecrets/Certs]
+    FN[Azure Functions Orchestration]
+    LA[Logic Apps B2B / EDI workflows]
+    SB[Service Bus Queues + Topics]
+    EH[Event Hubs Streaming events]
+    KV[Key Vault Secrets/Certs]
   end
 
   %% B2B/EDI
   subgraph B2B[EDI / B2B]
-    IA[Integration Account\nSchemas/Maps/Agreements]
-    X12[X12 / EDIFACT\n(850/855/856/810)]
+    IA[Integration Account Schemas/Maps/Agreements]
+    X12[X12 / EDIFACT 850/855/856/810]
     SFTP[SFTP Endpoint Blob/ADLS]
   end
 
   %% Data
   subgraph Data[Data Platform]
-    SQL[Azure SQL Database\nOrders/Invoices Master]
+    SQL[Azure SQL Database Orders/Invoices Master]
     DL[ADLS Gen2 Raw/Curated]
     CG[Cosmos DB Supplier catalog cache]
     SR[Schema Registry Optional]
@@ -292,7 +292,7 @@ flowchart LR
   subgraph Obs[Observability]
     AI[Application Insights]
     MON[Azure Monitor Alerts]
-    SIEM[Microsoft Sentinel\n(optional)]
+    SIEM[Microsoft Sentinel optional ]
   end
 
   %% Suppliers
