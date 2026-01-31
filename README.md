@@ -245,16 +245,16 @@ Below is a **battle-tested Azure supplier integration architecture** that covers
 flowchart LR
   %% Channels
   subgraph Channels[Consumers]
-    A1[ERP / Accounting\n(Sage, Viewpoint, CMiC)]
-    A2[Procurement Portal\n(Web / Mobile)]
-    A3[Jobsite Apps\n(Superintendent / Foreman)]
+    A1[ERP / Accounting Sage, Viewpoint, CMiC]
+    A2[Procurement Portal Web / Mobile]
+    A3[Jobsite Apps Superintendent / Foreman]
   end
 
   %% Edge/API
   subgraph Edge[API & Security Edge]
     APIM[Azure API Management]
     WAF[App Gateway + WAF]
-    IDP[Entra ID / B2C\n(OIDC/OAuth2)]
+    IDP[Entra ID / B2C OIDC/OAuth2]
   end
 
   %% Integration
@@ -270,15 +270,15 @@ flowchart LR
   subgraph B2B[EDI / B2B]
     IA[Integration Account\nSchemas/Maps/Agreements]
     X12[X12 / EDIFACT\n(850/855/856/810)]
-    SFTP[SFTP Endpoint\nBlob/ADLS]
+    SFTP[SFTP Endpoint Blob/ADLS]
   end
 
   %% Data
   subgraph Data[Data Platform]
-    SQL[(Azure SQL Database\nOrders/Invoices Master)]
-    DL[(ADLS Gen2\nRaw/Curated)]
-    CG[(Cosmos DB\nSupplier catalog cache)]
-    SR[Schema Registry\n(optional)]
+    SQL[Azure SQL Database\nOrders/Invoices Master]
+    DL[ADLS Gen2 Raw/Curated]
+    CG[Cosmos DB Supplier catalog cache]
+    SR[Schema Registry Optional]
   end
 
   %% Analytics
