@@ -220,6 +220,317 @@ they choose it because it’s **reliable, predictable, and construction-native**
 
 ---
 
+Below is a **battle-tested Azure supplier integration architecture** that covers **APIs + EDI + spend analytics**, designed for a contractor or distributor ecosystem (suppliers like White Cap, HD Supply, Grainger, etc.), with **SOX-friendly controls**, strong observability, and clean separation of concerns.
+
+---
+
+## Target Architecture
+
+### What it supports
+
+* **Supplier catalog & pricing** (contract pricing, regional availability)
+* **Punchout / procurement** (optional)
+* **PO creation + acknowledgement**
+* **Ship notices / ASN**
+* **Invoices + credits**
+* **Payments status**
+* **Returns / RMAs**
+* **Spend analytics** (project / cost code / supplier / category)
+
+---
+
+## High-level Azure Architecture
+
+```mermaid
+flowchart LR
+  %% Channels
+  subgraph Channels[Consumers]
+    A1[ERP / Accounting\n(Sage, Viewpoint, CMiC)]
+    A2[Procurement Portal\n(Web / Mobile)]
+    A3[Jobsite Apps\n(Superintendent / Foreman)]
+  end
+
+  %% Edge/API
+  subgraph Edge[API & Security Edge]
+    APIM[Azure API Management]
+    WAF[App Gateway + WAF]
+    IDP[Entra ID / B2C\n(OIDC/OAuth2)]
+  end
+
+  %% Integration
+  subgraph Integration[Integration Layer]
+    FN[Azure Functions\nOrchestration]
+    LA[Logic Apps\nB2B / EDI workflows]
+    SB[Service Bus\nQueues + Topics]
+    EH[Event Hubs\nStreaming events]
+    KV[Key Vault\nSecrets/Certs]
+  end
+
+  %% B2B/EDI
+  subgraph B2B[EDI / B2B]
+    IA[Integration Account\nSchemas/Maps/Agreements]
+    X12[X12 / EDIFACT\n(850/855/856/810)]
+    SFTP[SFTP Endpoint\nBlob/ADLS]
+  end
+
+  %% Data
+  subgraph Data[Data Platform]
+    SQL[(Azure SQL Database\nOrders/Invoices Master)]
+    DL[(ADLS Gen2\nRaw/Curated)]
+    CG[(Cosmos DB\nSupplier catalog cache)]
+    SR[Schema Registry\n(optional)]
+  end
+
+  %% Analytics
+  subgraph Analytics[Analytics & Reporting]
+    DBX[Databricks / Synapse\nTransforms]
+    PBI[Power BI\nSpend + Ops KPIs]
+    KQL[Log Analytics / Kusto\nOperational analytics]
+  end
+
+  %% Observability
+  subgraph Obs[Observability]
+    AI[Application Insights]
+    MON[Azure Monitor Alerts]
+    SIEM[Microsoft Sentinel\n(optional)]
+  end
+
+  %% Suppliers
+  subgraph Suppliers[Suppliers]
+    S1[Supplier APIs\nCatalog/Orders/Invoices]
+    S2[EDI VAN / AS2\nor Direct EDI]
+  end
+
+  %% Flows
+  A1 -->|REST| WAF --> APIM
+  A2 -->|REST| WAF --> APIM
+  A3 -->|REST| WAF --> APIM
+  APIM --> IDP
+  APIM --> FN
+
+  FN --> SB
+  FN --> SQL
+  FN --> CG
+  FN --> AI
+
+  SB --> LA
+  LA --> IA
+  IA --> X12
+  X12 --> S2
+  S2 --> X12 --> IA --> LA --> SB
+
+  FN -->|Supplier REST| S1
+  S1 --> FN
+
+  LA --> SFTP
+  SFTP --> DL
+  SQL --> DBX --> PBI
+  DL --> DBX --> PBI
+  AI --> MON
+  AI --> KQL
+  KQL --> SIEM
+  KV --> FN
+  KV --> LA
+```
+
+---
+
+## Core Patterns (so this stays reliable at scale)
+
+### 1) API pattern: “Front Door + Policy + Contract”
+
+**APIM** becomes your “single throat to choke”:
+
+* OAuth2/OIDC enforcement, rate limits, IP allowlists
+* Subscription keys per consumer (ERP vs portal vs jobsite)
+* Request/response validation (schemas)
+* Transform + normalize payloads (lightweight; keep heavy transforms out)
+
+**Best practice:**
+Use **canonical internal APIs** (your contract), and map each supplier’s quirks behind the scenes.
+
+---
+
+### 2) EDI pattern: “Events drive B2B, not the other way around”
+
+Treat EDI documents as **messages** with strict lifecycle states:
+
+* Received → Validated → Mapped → Posted → Acknowledged → Reconciled
+* Every stage emits events into Service Bus
+
+This makes EDI observable and retryable—like any other integration.
+
+---
+
+### 3) Messaging pattern: “Service Bus for reliability, Event Hubs for telemetry”
+
+* **Service Bus Topics** for business events (PO.Created, Invoice.Received)
+* **Service Bus Queues** for work items (per supplier or doc type)
+* **Event Hubs** for high-volume “clickstream-like” integration telemetry (optional)
+
+---
+
+## Key Workflows (API + EDI together)
+
+### Workflow A — Create PO (API-first, with EDI fallback)
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant ERP as ERP/Portal
+  participant APIM as APIM
+  participant FN as Functions (PO Orchestrator)
+  participant SB as Service Bus
+  participant SUP as Supplier API
+  participant LA as Logic Apps (EDI)
+  participant IA as Integration Account
+
+  ERP->>APIM: POST /purchase-orders
+  APIM->>FN: Validate + forward
+  FN->>SB: Publish PO.Created event
+
+  alt Supplier supports REST orders
+    FN->>SUP: Create PO via API
+    SUP-->>FN: PO Ack (id/status)
+  else Supplier requires EDI
+    SB->>LA: Trigger PO.Created
+    LA->>IA: Map to X12 850
+    IA-->>LA: 850 payload
+    LA-->>SB: EDI.Sent(850)
+  end
+
+  FN-->>ERP: 202 Accepted + trackingId
+```
+
+### Workflow B — Invoice ingest + 3-way match (810 / API invoice)
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant SUP as Supplier (EDI/API)
+  participant LA as Logic Apps
+  participant IA as Integration Account
+  participant SB as Service Bus
+  participant FN as Functions (Invoice Processor)
+  participant SQL as Azure SQL (PO/Receipt/Invoice)
+  participant PBI as Power BI
+
+  SUP->>LA: EDI 810 (Invoice) or API callback
+  LA->>IA: Validate schema + agreement
+  IA-->>LA: Normalized invoice JSON
+  LA->>SB: Invoice.Received
+
+  SB->>FN: Trigger processing
+  FN->>SQL: Persist invoice + line items
+  FN->>SQL: 3-way match (PO/Receipt/Invoice)
+  FN-->>SB: Invoice.Matched or Invoice.Exception
+
+  SQL-->>PBI: Spend + Exceptions reporting (refresh)
+```
+
+---
+
+## Spend Analytics Model (what you should store)
+
+### Canonical “Spend Fact” (curated table)
+
+Minimum fields:
+
+* SupplierId, SupplierName
+* ProjectId, CostCode
+* POId, InvoiceId, ReceiptId
+* Category (tools, safety, concrete, fasteners)
+* Amount, Tax, Freight, Discounts
+* InvoiceDate, PostingDate
+* Region/Branch (if relevant)
+* MatchStatus (Matched / Partial / Exception)
+* SLA metrics (days to ack, ship, invoice, pay)
+
+**Storage approach**
+
+* System-of-record: **Azure SQL** (for transactional truth + audit)
+* Raw + historical + documents: **ADLS Gen2**
+* Curated analytics: **Databricks/Synapse → Power BI**
+
+---
+
+## Security + Compliance (SOX-friendly)
+
+### Identity & access
+
+* APIM protected by **Entra ID** (users) and **Managed Identities** (services)
+* Supplier integrations use **client certs / mTLS** where possible (stored in Key Vault)
+* RBAC + least privilege everywhere
+
+### Data protection
+
+* TLS everywhere; private endpoints for SQL/Storage where possible
+* Encryption at rest (default); consider CMK if required
+* PII minimization: store only what you need for procurement/accounting
+
+### Auditability
+
+* Every document/message has:
+
+  * correlationId, supplierId, documentType, status, timestamps
+* Immutable raw payloads in ADLS “raw” zone (append-only)
+* Logs in Log Analytics + long retention as needed
+
+---
+
+## Ops / Observability (you’ll thank yourself later)
+
+**Application Insights**
+
+* Track each integration transaction with a single correlationId
+* Custom events: `PO.Created`, `EDI.Parsed`, `Invoice.Matched`, `Retry.Attempted`
+
+**Dashboards worth building**
+
+* Orders: created vs acked vs failed (by supplier)
+* EDI: 850/855/856/810 counts + failure reasons
+* Finance: invoice exceptions by category/cost code
+* Latency: time from PO → ack, ship, invoice, paid
+
+---
+
+## Recommended “MVP → Scale” Build Plan
+
+### MVP (2–4 weeks if you’re moving fast)
+
+* APIM + Functions canonical endpoints: PO, Invoice
+* Service Bus topics + dead-letter handling
+* Azure SQL master tables + ADLS raw payload storage
+* One supplier via API, one supplier via EDI (prove both patterns)
+* Power BI initial spend dashboard
+
+### Scale (next 6–12 weeks)
+
+* EDI agreements per supplier + automated onboarding checklist
+* Retry policies + idempotency keys everywhere
+* Databricks/Synapse curated spend model
+* Sentinel (optional) + alert tuning
+* Supplier scorecards (OTIF, ack SLA, invoice accuracy)
+
+---
+
+## If you want, I can generate “starter assets” for this
+
+Pick what you want and I’ll drop it in ready-to-run format:
+
+1. **Azure SQL schema** (PO/Invoice/Receipt + SpendFact + Audit tables)
+2. **APIM API design** (OpenAPI spec + policies for rate limit + JWT validate)
+3. **Function App skeleton** (.NET or Node) with:
+
+   * idempotency
+   * Service Bus publish/subscribe
+   * correlationId propagation
+4. **Logic Apps EDI workflow outline** (850/855/810)
+5. **Power BI KPI list + sample dashboard layout**
+
+Tell me your preferred stack for Functions (**.NET** vs **Node**) and whether you want **EDI via Logic Apps** or an **EDI translator service** pattern—and I’ll tailor the templates.
+
+
 ## Architecture Diagram
 
 ```mermaid
