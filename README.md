@@ -397,11 +397,77 @@ sequenceDiagram
   end
 ```
 
-If you want, I can also generate:
+Below is a **clean, executive- and audit-ready table** that explains **each step in the White Cap end-to-end system sequence** — written so **finance, supply chain, IT, and auditors** can all read the same document and agree on it.
 
-* a **swimlane version** (more “exec-friendly”)
-* the same diagram but with **API vs EDI branches** called out explicitly (850/855/856/810)
-* a **SOX-controls overlay** (who approves what, audit trail checkpoints, segregation of duties)
+This maps directly to the diagram you requested.
+
+---
+
+# 🏗️ White Cap — End-to-End System Flow (Step Explanation Table)
+
+| Step # | Phase                   | System(s) Involved    | What Happens                                                                  | Why It Matters                                                    |
+| ------ | ----------------------- | --------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| 1      | Demand Capture          | WMS → GAINS           | Daily sales, inventory levels, transfers, and stockouts are sent to GAINS     | Provides real consumption data instead of guess-based forecasting |
+| 2      | Demand Forecasting      | GAINS                 | AI/ML models forecast SKU demand by branch, seasonality, and project activity | Prevents overstock and stockouts                                  |
+| 3      | Replenishment Planning  | GAINS                 | System generates recommended reorder quantities and timing                    | Optimizes working capital                                         |
+| 4      | Requisition Creation    | GAINS → Coupa         | Approved replenishment plans generate purchase requisitions                   | Standardizes buying across branches                               |
+| 5      | Procurement Controls    | Coupa                 | Pricing contracts, approved suppliers, and approval workflows enforced        | Eliminates maverick spend                                         |
+| 6      | Accounting Validation   | Coupa → Oracle EBS    | Vendor, GL segments, and accounting rules validated                           | Prevents downstream posting errors                                |
+| 7      | Purchase Order Issuance | Coupa → Supplier      | PO transmitted via API or EDI                                                 | Creates legally binding purchase commitment                       |
+| 8      | PO Acknowledgement      | Supplier → Coupa      | Supplier confirms quantities, pricing, and delivery dates                     | Locks the PO baseline                                             |
+| 9      | Commitment Update       | Coupa → Oracle EBS    | PO summary posted for financial commitments                                   | Enables accrual forecasting                                       |
+| 10     | Advance Ship Notice     | Supplier → Coupa      | Supplier sends ASN with packing and shipment details                          | Enables proactive receiving                                       |
+| 11     | Inbound Visibility      | Coupa → WMS / TMS     | Expected receipts and ETAs shared                                             | Improves dock and labor planning                                  |
+| 12     | Goods Receipt           | WMS                   | Warehouse receives goods via scanning and inspection                          | Confirms physical receipt                                         |
+| 13     | Receipt Posting         | WMS → Coupa           | Receipt quantities and discrepancies recorded                                 | Creates receiving evidence                                        |
+| 14     | Financial Accrual       | Coupa → Oracle EBS    | Receipt posted for inventory valuation                                        | Accurate financial statements                                     |
+| 15     | Invoice Submission      | Supplier → Coupa      | Supplier submits invoice electronically                                       | Eliminates paper invoices                                         |
+| 16     | Invoice Validation      | Coupa                 | Duplicate checks, tax validation, line verification                           | Prevents payment errors                                           |
+| 17     | 3-Way Match             | Coupa                 | Invoice compared against PO and receipt                                       | Core financial control                                            |
+| 18     | Match Approved          | Coupa → Oracle EBS    | Clean invoices posted to AP                                                   | Auto-approval reduces AP workload                                 |
+| 19     | Exception Routing       | Coupa                 | Mismatches routed for review                                                  | Controlled human intervention                                     |
+| 20     | Exception Resolution    | Buyer / AP            | PO correction, receipt update, or credit memo                                 | Maintains audit integrity                                         |
+| 21     | AP Posting              | Oracle EBS            | Approved invoice recorded in AP                                               | System of record updated                                          |
+| 22     | Payment Processing      | Oracle EBS            | ACH, wire, or check issued                                                    | Cash disbursement control                                         |
+| 23     | Remittance Advice       | Oracle EBS → Supplier | Payment confirmation sent                                                     | Reduces supplier disputes                                         |
+| 24     | Inventory Update        | Oracle EBS / WMS      | Inventory valuation finalized                                                 | Accurate cost of goods                                            |
+| 25     | Customer Fulfillment    | WMS / TMS             | Materials picked, routed, and delivered to jobsite                            | Revenue enablement                                                |
+| 26     | Proof of Delivery       | Carrier → TMS         | Delivery confirmation captured                                                | Supports customer billing                                         |
+| 27     | AR Billing              | Oracle EBS            | Customer invoice generated                                                    | Revenue recognition                                               |
+| 28     | Financial Close         | Oracle EBS            | Transactions included in period close                                         | SOX-compliant accounting                                          |
+| 29     | Spend Analytics         | BI / Power BI         | Spend, supplier performance, and cycle metrics published                      | Executive visibility                                              |
+| 30     | Feedback Loop           | BI → GAINS            | Actual consumption feeds forecasting models                                   | Continuous optimization                                           |
+
+---
+
+## 🔐 Control Points (Auditors Care About These)
+
+| Control Area          | Enforced By    |
+| --------------------- | -------------- |
+| Approved suppliers    | Coupa          |
+| Contract pricing      | Coupa          |
+| Segregation of duties | Oracle EBS     |
+| Receiving evidence    | WMS            |
+| 3-way match           | Coupa          |
+| Payment authority     | Oracle EBS     |
+| Immutable audit trail | Oracle + Coupa |
+| Forecast validation   | GAINS          |
+
+---
+
+## 🧠 Why This Model Works at White Cap Scale
+
+* **GAINS** optimizes *what to buy*
+* **Coupa** controls *how to buy*
+* **Oracle EBS** controls *how money moves*
+
+Each system stays in its lane — no overlap, no chaos.
+
+---
+
+## Executive Summary (One-liner)
+
+> White Cap’s architecture allows hundreds of branches to operate independently while finance maintains centralized control, auditability, and real-time visibility across procurement, inventory, and spend.
 
 ---
 
