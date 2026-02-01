@@ -62,13 +62,6 @@ Finance teams can reconcile invoices directly into systems like:
 * Sage 300 / 100
 * CMiC
 
-![Image](https://mma.prnewswire.com/media/2034633/White_Cap_Supply_Holdings_Logo.jpg?p=twitter)
-
-![Image](https://embed-ssl.wistia.com/deliveries/88ecb237e631f5fe1e5cd723906a4b08c7afa715.webp?image_crop_resized=1280x720)
-
-![Image](https://d2ou5j4j4yi9kl.cloudfront.net/userfiles/contentassets/our%20company/about-investors.jpg)
-
-![Image](https://media.bizj.us/view/img/13062332/white-cap-perris%2A1200xx738-738-431-0.jpg)
 
 ## 🏗️ White Cap — Enterprise Systems Architecture (Expanded View)
 
