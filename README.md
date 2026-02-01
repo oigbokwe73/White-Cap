@@ -62,10 +62,297 @@ Finance teams can reconcile invoices directly into systems like:
 * Sage 300 / 100
 * CMiC
 
-This drastically reduces accounting overhead.
+![Image](https://mma.prnewswire.com/media/2034633/White_Cap_Supply_Holdings_Logo.jpg?p=twitter)
+
+![Image](https://embed-ssl.wistia.com/deliveries/88ecb237e631f5fe1e5cd723906a4b08c7afa715.webp?image_crop_resized=1280x720)
+
+![Image](https://d2ou5j4j4yi9kl.cloudfront.net/userfiles/contentassets/our%20company/about-investors.jpg)
+
+![Image](https://media.bizj.us/view/img/13062332/white-cap-perris%2A1200xx738-738-431-0.jpg)
+
+## 🏗️ White Cap — Enterprise Systems Architecture (Expanded View)
+
+**White Cap** operates at massive scale — thousands of SKUs, hundreds of branches, same-day jobsite delivery, and tight supplier margins.
+To support this, White Cap runs a **modern, enterprise-grade digital backbone** built specifically for **distribution velocity, financial control, and supplier reliability**.
+
+Below is a deeper explanation of **why each system was chosen, what it controls, and how they work together**.
 
 ---
 
+# 🧱 White Cap Enterprise Technology Stack
+
+---
+
+## 1️⃣ Financial ERP — Oracle E-Business Suite (EBS)
+
+**Selected in 2021** to replace fragmented legacy financial systems.
+
+### Why Oracle EBS
+
+White Cap needed:
+
+* High-volume transaction processing
+* Strong internal controls
+* Multi-branch accounting
+* Robust audit and compliance support
+
+Oracle EBS excels at:
+
+* General Ledger (GL)
+* Accounts Payable (AP)
+* Accounts Receivable (AR)
+* Fixed Assets
+* Cost accounting
+* Intercompany accounting
+
+### What Oracle EBS controls
+
+* Official books of record
+* Supplier master data
+* Payment execution (ACH / wire / checks)
+* Revenue recognition
+* Period close and reporting
+
+### Why this matters
+
+At White Cap’s scale:
+
+* Millions of invoices annually
+* Thin distribution margins
+* Heavy audit and compliance requirements
+
+Oracle provides:
+
+* Strong segregation of duties
+* Approval hierarchies
+* Audit trails
+* SOX-aligned controls
+
+**Oracle EBS is the financial authority — nothing posts without it.**
+
+---
+
+## 2️⃣ Supply Chain Planning — GAINS Platform
+
+White Cap uses **GAINS** for advanced supply chain forecasting and replenishment.
+
+### Why GAINS
+
+Construction supply demand is:
+
+* Highly regional
+* Seasonal
+* Weather-dependent
+* Project-driven (non-linear)
+
+GAINS provides:
+
+* AI/ML-based demand forecasting
+* Branch-level inventory optimization
+* Replenishment recommendations
+* Safety stock optimization
+
+### What GAINS manages
+
+* SKU demand forecasting per branch
+* Inventory turn optimization
+* Reorder point calculations
+* Stock-out prevention
+* Excess inventory reduction
+
+### Example
+
+If rebar demand spikes in Texas but slows in Ohio:
+
+* GAINS reallocates inventory strategies
+* Prevents both shortages and overstock
+
+### Why this matters
+
+For distributors:
+
+* Inventory = cash tied up
+* Overstock kills margins
+* Stock-outs kill customers
+
+GAINS helps White Cap:
+
+* Increase inventory turns
+* Reduce working capital
+* Maintain same-day fulfillment
+
+---
+
+## 3️⃣ Procurement Platform — Coupa
+
+White Cap partners with **Coupa** for procurement and spend control.
+
+### Why Coupa
+
+White Cap buys from:
+
+* Thousands of manufacturers
+* Thousands of suppliers
+* Across regions, branches, and categories
+
+Coupa provides:
+
+* Centralized procurement workflows
+* Supplier onboarding
+* Digital POs
+* Invoice automation
+* Spend analytics
+
+### What Coupa controls
+
+* Purchase requisitions
+* PO approvals
+* Supplier catalogs
+* Invoicing intake
+* 3-way match orchestration
+* Supplier payments (pre-ERP)
+
+### Coupa acts as the “front door” for spend
+
+* Branches request purchases in Coupa
+* Suppliers submit invoices through Coupa
+* Coupa validates invoices before ERP posting
+
+### Why this matters
+
+Without Coupa:
+
+* Procurement becomes fragmented
+* Maverick spend increases
+* Pricing contracts are bypassed
+* Invoice errors multiply
+
+Coupa enforces **procurement discipline at scale**.
+
+---
+
+## 4️⃣ How These Systems Work Together
+
+### End-to-End Flow (Simplified)
+
+```text
+Demand → Planning → Procurement → Receiving → Invoicing → Payment → Analytics
+```
+
+| Stage                 | System     |
+| --------------------- | ---------- |
+| Demand forecast       | GAINS      |
+| Replenishment signals | GAINS      |
+| Purchase requisitions | Coupa      |
+| PO creation           | Coupa      |
+| Supplier invoicing    | Coupa      |
+| 3-way match           | Coupa      |
+| Financial posting     | Oracle EBS |
+| Payment execution     | Oracle EBS |
+| Financial reporting   | Oracle EBS |
+| Spend analytics       | Coupa + BI |
+
+Each system has **clear ownership boundaries**, which is critical at enterprise scale.
+
+---
+
+## 5️⃣ Why This Architecture Works for a Distributor Like White Cap
+
+### ✔ Separation of concerns
+
+* GAINS = *what to buy*
+* Coupa = *how to buy*
+* Oracle = *how to pay & report*
+
+No system overlaps responsibilities unnecessarily.
+
+---
+
+### ✔ Scales across hundreds of branches
+
+Each branch operates independently but reports centrally.
+
+* Local demand
+* Central procurement rules
+* Corporate financial control
+
+This balance is extremely difficult without this architecture.
+
+---
+
+### ✔ Strong supplier governance
+
+* Contract pricing enforced in Coupa
+* Approved suppliers only
+* Invoice validation before payment
+* Clean audit trails
+
+---
+
+### ✔ Finance-grade controls
+
+* Oracle enforces accounting integrity
+* Coupa enforces procurement compliance
+* GAINS optimizes cash tied in inventory
+
+This trio supports:
+
+* SOX compliance
+* External audits
+* Internal controls
+* Predictable cash flow
+
+---
+
+## 6️⃣ Why Construction Distributors Need This Level of Stack
+
+Unlike retailers:
+
+* Orders are job-driven
+* Delivery is time-critical
+* Margins are thin
+* Inventory is heavy
+* Customers expect instant fulfillment
+
+White Cap’s technology stack is designed to support:
+
+* Same-day delivery
+* Regional inventory autonomy
+* Centralized financial discipline
+* Massive transaction throughput
+
+This is **distribution engineering**, not just IT.
+
+---
+
+## 7️⃣ Strategic Outcome for White Cap
+
+This architecture enables White Cap to:
+
+* Operate hundreds of branches as one enterprise
+* Maintain pricing discipline across regions
+* Reduce inventory risk
+* Improve supplier payment accuracy
+* Support rapid acquisitions and integrations
+* Scale without losing financial control
+
+> **This is why White Cap can grow aggressively without operational chaos.**
+
+---
+
+## 🧠 Final Summary
+
+| Layer                 | Platform       | Purpose                             |
+| --------------------- | -------------- | ----------------------------------- |
+| Financial Core        | Oracle EBS     | Accounting, payments, compliance    |
+| Procurement           | Coupa          | Spend control, PO, invoicing        |
+| Supply Chain Planning | GAINS          | Forecasting, inventory optimization |
+| Distribution Ops      | Branch systems | Fulfillment, delivery               |
+| Analytics             | BI platforms   | Performance visibility              |
+
+Together, these systems form a **modern distributor operating model**.
+
+---
 ### 🔹 4. Field Sales Reps Who Know Construction
 
 White Cap reps are not retail clerks — many come from:
