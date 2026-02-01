@@ -302,6 +302,107 @@ This trio supports:
 * Internal controls
 * Predictable cash flow
 
+
+```mermaid
+sequenceDiagram
+  autonumber
+  %% --- Actors / Systems ---
+  participant PM as Branch / Buyer / Planner
+  participant GAINS as GAINS (Demand Planning)
+  participant COUPA as Coupa (Procure-to-Pay)
+  participant SUP as Supplier / Manufacturer
+  participant WMS as WMS (Warehouse Mgmt)
+  participant TMS as TMS (Transportation / Delivery)
+  participant CARR as Carrier / Fleet
+  participant ORCL as Oracle E-Business Suite (Financial ERP)
+  participant BI as Analytics (DWH/Power BI)
+
+  %% =========================
+  %% 1) Demand Planning & Replenishment
+  %% =========================
+  rect rgb(235, 245, 255)
+    note over GAINS,WMS: 1) Demand Planning & Replenishment (Stocked Items)
+    WMS-->>GAINS: Daily inventory, sales, transfers, stockouts
+    GAINS-->>GAINS: Forecast demand by branch/SKU + seasonality/projects
+    GAINS-->>PM: Replenishment recommendations (SKU/qty/branch/date)
+    PM->>COUPA: Create requisition (auto or assisted) + cost center/branch
+    COUPA-->>COUPA: Validate supplier, contract pricing, approvals, budget rules
+    COUPA->>ORCL: Commit/encumber (optional) + vendor master/GL validation
+    ORCL-->>COUPA: Approved accounting context (vendor, terms, GL segments)
+    COUPA->>SUP: Issue Purchase Order (PO) (API/EDI/email)
+    SUP-->>COUPA: PO Acknowledgement (confirm qty/dates or propose changes)
+    COUPA-->>ORCL: PO summary / commitment update (status + expected receipt)
+  end
+
+  %% =========================
+  %% 2) Inbound Logistics & Receiving
+  %% =========================
+  rect rgb(245, 255, 235)
+    note over SUP,WMS: 2) Inbound Logistics & Receiving (ASN → Receipt)
+    SUP-->>COUPA: ASN / Ship Notice (API/EDI) with cartons/pallets/tracking
+    COUPA-->>WMS: Inbound expected receipt (items/qty/ETA/packing)
+    CARR-->>TMS: Inbound shipment status updates (pickup/in-transit/arrival)
+    TMS-->>WMS: Dock appointment / ETA adjustments (optional)
+    WMS-->>WMS: Receive goods (scan/putaway/lot/serial if needed)
+    WMS-->>COUPA: Receipt confirmation (GRN) + discrepancies/damages
+    COUPA-->>ORCL: Receipt posted (for accruals / inventory valuation)
+  end
+
+  %% =========================
+  %% 3) Invoice → 3-Way Match → Payment
+  %% =========================
+  rect rgb(255, 245, 235)
+    note over COUPA,ORCL: 3) Invoice Processing (3-Way Match + Payment)
+    SUP-->>COUPA: Invoice submitted (API/EDI/PDF ingest) + invoice number
+    COUPA-->>COUPA: Validate duplicates, tax, terms, line integrity
+    COUPA-->>COUPA: 3-way match (PO vs Receipt vs Invoice) + tolerances
+    alt Matched (within tolerance)
+      COUPA-->>ORCL: Post AP invoice (approved) + coding/segments
+      ORCL-->>ORCL: AP invoice created + scheduled for payment run
+      ORCL-->>SUP: Remittance / payment execution (ACH/wire/check)
+      ORCL-->>COUPA: Payment status (paid/date/reference)
+    else Exception (qty/price/tax mismatch)
+      COUPA-->>PM: Exception workflow (review/resolve/approve/reject)
+      PM-->>COUPA: Resolve (credit request / receipt correction / PO change)
+      COUPA-->>COUPA: Re-run match after resolution
+      COUPA-->>ORCL: Post AP invoice when approved
+    end
+  end
+
+  %% =========================
+  %% 4) Customer Order Fulfillment (Branch / Jobsite)
+  %% =========================
+  rect rgb(240, 240, 255)
+    note over WMS,TMS: 4) Customer Fulfillment (Counter / Delivery / Jobsite)
+    PM->>WMS: Create sales order / pick request (branch fulfillment)
+    WMS-->>WMS: Allocate inventory + wave/pick/pack
+    WMS->>TMS: Load planning + route optimization + delivery schedule
+    TMS->>CARR: Dispatch delivery (company fleet or 3rd-party)
+    CARR-->>TMS: Proof of delivery (POD) + exceptions (damaged/short)
+    TMS-->>WMS: Delivery completion status
+    WMS-->>ORCL: Sales shipment confirmation (COGS/inventory decrement)
+    ORCL-->>ORCL: AR invoice generation (customer billing) + revenue posting
+  end
+
+  %% =========================
+  %% 5) Analytics, Controls, and Feedback Loops
+  %% =========================
+  rect rgb(250, 250, 250)
+    note over GAINS,BI: 5) Analytics & Feedback (Spend + Inventory + Service)
+    COUPA-->>BI: Spend, exceptions, supplier performance (PO/Invoice cycle time)
+    ORCL-->>BI: Financials (AP/AR/GL), aging, margins, close metrics
+    WMS-->>BI: Inventory turns, fill rate, stockouts, OTIF
+    TMS-->>BI: On-time delivery, route efficiency, cost per drop
+    BI-->>GAINS: Demand signals + forecast accuracy feedback
+  end
+```
+
+If you want, I can also generate:
+
+* a **swimlane version** (more “exec-friendly”)
+* the same diagram but with **API vs EDI branches** called out explicitly (850/855/856/810)
+* a **SOX-controls overlay** (who approves what, audit trail checkpoints, segregation of duties)
+
 ---
 
 ## 6️⃣ Why Construction Distributors Need This Level of Stack
